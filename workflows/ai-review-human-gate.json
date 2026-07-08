@@ -1,0 +1,181 @@
+{
+  "name": "Nexus - AI Review Human Gate / Revision AI con Aprobacion Humana",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Simulates an AI review step without calling an external model. Designed to show governance: classify, require approval for risky output, then respond.",
+        "height": 180,
+        "width": 380
+      },
+      "id": "e81bcb2b-6247-49a1-a3d4-0902cbd83a15",
+      "name": "Workflow Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-560, -240]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-review-human-gate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "51c8e0ce-fcc4-4eb7-a83b-e84d0daa8bd2",
+      "name": "Review Request Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-560, 80],
+      "webhookId": "ai-review-human-gate-demo"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body ?? $json;\nconst text = String(body.text ?? 'Demo request for review');\nconst riskyTerms = ['credential', 'password', 'token', 'customer export'];\nconst matches = riskyTerms.filter((term) => text.toLowerCase().includes(term));\nconst risk = matches.length > 0 ? 'needs-human-review' : 'auto-approved';\nreturn [{ json: { requestId: body.requestId ?? 'AI-DEMO-001', risk, matches, recommendation: risk === 'auto-approved' ? 'approve' : 'hold', bilingual: { en: `Review result: ${risk}`, es: `Resultado de revision: ${risk}` } } }];"
+      },
+      "id": "d0225dc4-34f7-4a57-bfbb-4490d25b21d8",
+      "name": "Simulate AI Policy Review",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-260, 80]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "human-review-check",
+              "leftValue": "={{ $json.risk }}",
+              "rightValue": "needs-human-review",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a9c8aa72-b6fc-495a-8244-4d82827408c6",
+      "name": "Needs Human Review?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [40, 80]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { ...$json, gate: 'human-review-created', assignedTeam: 'Data Governance', bilingual: { en: 'Human review required before release', es: 'Revision humana requerida antes de liberar' } } }];"
+      },
+      "id": "ef275462-f29e-4281-96db-c95bb09dbe4c",
+      "name": "Create Human Gate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [340, -20]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { ...$json, gate: 'auto-approved', assignedTeam: 'Automation', bilingual: { en: 'Request approved by policy', es: 'Solicitud aprobada por politica' } } }];"
+      },
+      "id": "3ad49448-beca-402d-967b-b4944a2a1f9c",
+      "name": "Auto Approve",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [340, 180]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 202
+        }
+      },
+      "id": "265924ec-13fa-4cd3-9655-86394441c81b",
+      "name": "Return Review Decision",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [660, 80]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Review Request Webhook": {
+      "main": [
+        [
+          {
+            "node": "Simulate AI Policy Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simulate AI Policy Review": {
+      "main": [
+        [
+          {
+            "node": "Needs Human Review?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Human Review?": {
+      "main": [
+        [
+          {
+            "node": "Create Human Gate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Auto Approve",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Human Gate": {
+      "main": [
+        [
+          {
+            "node": "Return Review Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto Approve": {
+      "main": [
+        [
+          {
+            "node": "Return Review Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "ai-review-human-gate-v1",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "demo"
+  },
+  "id": "ai-review-human-gate"
+}

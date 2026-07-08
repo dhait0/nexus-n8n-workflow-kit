@@ -1,0 +1,143 @@
+{
+  "name": "Nexus - Incident Triage Router / Enrutador de Incidentes",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Webhook-driven incident routing. Uses deterministic scoring, mock HTTP escalation, and bilingual response payloads.",
+        "height": 160,
+        "width": 360
+      },
+      "id": "a267cd0a-cf68-4d75-9d3d-508ae3fd1322",
+      "name": "Workflow Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-540, -220]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incident-triage-router",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "efc37a30-05ed-4870-8e84-c93439b859b9",
+      "name": "Incident Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-540, 80],
+      "webhookId": "incident-triage-router-demo"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body ?? $json;\nconst severity = String(body.severity ?? 'medium').toLowerCase();\nconst hasCustomerImpact = Boolean(body.customerImpact ?? false);\nconst route = severity === 'critical' || hasCustomerImpact ? 'war-room' : severity === 'high' ? 'platform-on-call' : 'ops-queue';\nreturn [{ json: { incidentId: body.incidentId ?? 'INC-DEMO-1001', severity, route, hasCustomerImpact, summary: body.summary ?? 'Synthetic incident', bilingual: { en: `Route incident to ${route}`, es: `Enviar incidente a ${route}` } } }];"
+      },
+      "id": "7f903c5a-3014-43a5-8850-f3e1c5c0812e",
+      "name": "Score Incident",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-240, 80]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.MOCK_SECURITY_API_URL || 'https://example.invalid/security/incidents/route' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "5173df03-595f-4bf3-aef0-e98d97683432",
+      "name": "Post Route Decision",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [60, 80],
+      "alwaysOutputData": true,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { acknowledgement: true, route: $json.route ?? 'mock-route-posted', workflow: 'incident-triage-router', bilingual: { en: 'Incident route accepted', es: 'Ruta de incidente aceptada' } } }];"
+      },
+      "id": "e53392c8-e4a0-4a28-b39b-7eb9c3821b79",
+      "name": "Build Acknowledgement",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [360, 80]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 202
+        }
+      },
+      "id": "0367f144-0d75-4346-bdaf-d1e280b5f009",
+      "name": "Return Triage Result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [660, 80]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Incident Webhook": {
+      "main": [
+        [
+          {
+            "node": "Score Incident",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score Incident": {
+      "main": [
+        [
+          {
+            "node": "Post Route Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Route Decision": {
+      "main": [
+        [
+          {
+            "node": "Build Acknowledgement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Acknowledgement": {
+      "main": [
+        [
+          {
+            "node": "Return Triage Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "incident-triage-router-v1",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "demo"
+  },
+  "id": "incident-triage-router"
+}

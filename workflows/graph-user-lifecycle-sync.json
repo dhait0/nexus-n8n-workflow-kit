@@ -1,0 +1,147 @@
+{
+  "name": "Nexus - Graph User Lifecycle Sync / Sincronizacion de Usuarios Graph",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Mock Microsoft Graph lifecycle sync. Uses demo payloads and HTTP Request placeholders only. Configure credentials inside n8n after import.",
+        "height": 170,
+        "width": 380
+      },
+      "id": "bd6815d8-40b8-4e06-a6b1-3a510d94f32d",
+      "name": "Workflow Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-560, -220]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "8576a5cb-548a-4542-822a-eb661c2a1886",
+      "name": "Every 6 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-560, 80]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.MOCK_CRM_API_URL || 'https://example.invalid/crm/users/pending' }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "3bf49f9e-0d81-4c3f-97d3-7ca186398a57",
+      "name": "Fetch Pending Users",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-260, 80],
+      "alwaysOutputData": true,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const fallbackUsers = [{ email: 'demo.user@example.invalid', action: 'provision', department: 'Operations' }];\nconst users = Array.isArray($json.users) ? $json.users : fallbackUsers;\nreturn users.map((user) => ({ json: { email: user.email, action: user.action ?? 'provision', department: user.department ?? 'Demo', graphOperation: user.action === 'disable' ? 'disableAccount' : 'ensureUser', bilingual: { en: `Prepare ${user.email} for Graph lifecycle sync`, es: `Preparar ${user.email} para sincronizacion Graph` } } }));"
+      },
+      "id": "c492393c-cdc7-4d07-9e41-b698caee60d9",
+      "name": "Normalize Lifecycle Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [40, 80]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.microsoft.com/v1.0/users",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ mail: $json.email, accountEnabled: $json.graphOperation !== 'disableAccount', department: $json.department }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "e271d53b-16ca-4d18-bd25-6b75f742f14d",
+      "name": "Graph Placeholder Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [340, 80],
+      "alwaysOutputData": true,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { syncedAt: new Date().toISOString(), workflow: 'graph-user-lifecycle-sync', status: 'mock-complete', bilingual: { en: 'Graph lifecycle sync completed with placeholder request', es: 'Sincronizacion Graph completada con request placeholder' } } }];"
+      },
+      "id": "04c5cc42-4853-4613-9841-e0e8537efb0d",
+      "name": "Build Sync Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [640, 80]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Every 6 Hours": {
+      "main": [
+        [
+          {
+            "node": "Fetch Pending Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Pending Users": {
+      "main": [
+        [
+          {
+            "node": "Normalize Lifecycle Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Lifecycle Items": {
+      "main": [
+        [
+          {
+            "node": "Graph Placeholder Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Graph Placeholder Request": {
+      "main": [
+        [
+          {
+            "node": "Build Sync Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "graph-user-lifecycle-sync-v1",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "demo"
+  },
+  "id": "graph-user-lifecycle-sync"
+}

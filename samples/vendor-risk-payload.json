@@ -1,0 +1,7 @@
+{
+  "vendorId": "vendor-demo-001",
+  "vendorName": "Demo Logistics Partner",
+  "riskScore": 84,
+  "country": "US",
+  "requestedBy": "procurement.demo@example.invalid"
+}

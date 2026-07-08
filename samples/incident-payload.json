@@ -1,0 +1,6 @@
+{
+  "incidentId": "INC-DEMO-1001",
+  "severity": "critical",
+  "customerImpact": true,
+  "summary": "Synthetic checkout latency alert"
+}

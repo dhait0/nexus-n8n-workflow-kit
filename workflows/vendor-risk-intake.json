@@ -1,0 +1,190 @@
+{
+  "name": "Nexus - Vendor Risk Intake / Ingreso de Riesgo Proveedor",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Enterprise-safe demo workflow. Receives a vendor payload, normalizes risk, posts to a mock review API, and returns a bilingual response. No credentials included.",
+        "height": 180,
+        "width": 360
+      },
+      "id": "a1c66d5e-7f71-48a4-9d29-197910f4fd00",
+      "name": "Workflow Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-520, -220]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vendor-risk-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1b924ddd-29f9-48af-8179-82a0d989de67",
+      "name": "Vendor Intake Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-520, 80],
+      "webhookId": "vendor-risk-intake-demo"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body ?? $json;\nconst score = Number(body.riskScore ?? 0);\nconst tier = score >= 80 ? 'critical' : score >= 55 ? 'review' : 'standard';\nreturn [{\n  json: {\n    vendorId: body.vendorId ?? 'vendor-demo-001',\n    vendorName: body.vendorName ?? 'Demo Vendor',\n    riskScore: score,\n    tier,\n    ownerTeam: tier === 'critical' ? 'Security Operations' : 'Procurement Operations',\n    bilingual: {\n      en: `Vendor classified as ${tier}`,\n      es: `Proveedor clasificado como ${tier}`\n    }\n  }\n}];"
+      },
+      "id": "84c7dc5c-aab5-44a6-9f10-137d3c1c5136",
+      "name": "Normalize Vendor Risk",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-220, 80]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "critical-tier-check",
+              "leftValue": "={{ $json.tier }}",
+              "rightValue": "critical",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "070087e8-acdb-4486-b491-d7e4c6e27d8a",
+      "name": "Critical Risk?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [80, 80]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.MOCK_SECURITY_API_URL || 'https://example.invalid/security/vendor-review' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "336df940-a52e-4527-8483-199128be0c90",
+      "name": "Create Security Review",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [380, -20],
+      "alwaysOutputData": true,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { ...$json, action: 'queued_for_procurement_review', bilingual: { en: 'Vendor queued for procurement review', es: 'Proveedor en cola de compras' } } }];"
+      },
+      "id": "417ac08c-d9a8-4624-b26a-d7833a80d36b",
+      "name": "Queue Procurement Review",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [380, 180]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, workflow: 'vendor-risk-intake', result: $json } }}",
+        "options": {
+          "responseCode": 202
+        }
+      },
+      "id": "38bb956b-4c3c-4c2a-87c0-cdf879f75492",
+      "name": "Return Intake Result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [700, 80]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Vendor Intake Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Vendor Risk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Vendor Risk": {
+      "main": [
+        [
+          {
+            "node": "Critical Risk?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Critical Risk?": {
+      "main": [
+        [
+          {
+            "node": "Create Security Review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Queue Procurement Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Security Review": {
+      "main": [
+        [
+          {
+            "node": "Return Intake Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Queue Procurement Review": {
+      "main": [
+        [
+          {
+            "node": "Return Intake Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "vendor-risk-intake-v1",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "demo"
+  },
+  "id": "vendor-risk-intake"
+}

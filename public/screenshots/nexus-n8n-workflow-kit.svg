@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1360" height="920" viewBox="0 0 1360 920">
+    <defs>
+      <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+        <path d="M48 0 L0 0 0 48" fill="none" stroke="rgba(15,27,19,0.08)" />
+      </pattern>
+    </defs>
+    <rect width="1360" height="920" fill="#dfe7d2" />
+    <rect width="1360" height="920" fill="url(#grid)" />
+    <rect x="0" y="0" width="1360" height="228" fill="#0f1b13" />
+    <text x="56" y="70" fill="#b7ff7a" font-size="13" font-weight="900" letter-spacing="3">NEXUS N8N WORKFLOW KIT / KIT DE FLUJOS N8N</text>
+    <text x="56" y="142" fill="#f7f0df" font-size="62" font-weight="900">Enterprise automation flows</text>
+    <text x="56" y="184" fill="#b7c9b0" font-size="20">Importable JSON, credential-safe placeholders, bilingual documentation</text>
+
+    
+      <g transform="translate(56, 292)">
+        <rect width="584" height="160" rx="8" fill="#f7f0df" stroke="#2f3a2f" />
+        <text x="24" y="44" fill="#0f1b13" font-size="28" font-weight="900">Vendor risk</text>
+        <text x="24" y="84" fill="#51624f" font-size="17">Webhook -> Code -> IF -> HTTP -> Response</text>
+        <rect x="24" y="110" width="128" height="24" rx="12" fill="#0f1b13" />
+        <text x="88" y="127" text-anchor="middle" fill="#b7ff7a" font-size="11" font-weight="800">importable JSON</text>
+      </g>
+      <g transform="translate(694, 292)">
+        <rect width="584" height="160" rx="8" fill="#f7f0df" stroke="#2f3a2f" />
+        <text x="24" y="44" fill="#0f1b13" font-size="28" font-weight="900">Incident triage</text>
+        <text x="24" y="84" fill="#51624f" font-size="17">Webhook -> Score -> Route -> Response</text>
+        <rect x="24" y="110" width="128" height="24" rx="12" fill="#0f1b13" />
+        <text x="88" y="127" text-anchor="middle" fill="#b7ff7a" font-size="11" font-weight="800">importable JSON</text>
+      </g>
+      <g transform="translate(56, 506)">
+        <rect width="584" height="160" rx="8" fill="#f7f0df" stroke="#2f3a2f" />
+        <text x="24" y="44" fill="#0f1b13" font-size="28" font-weight="900">AI review gate</text>
+        <text x="24" y="84" fill="#51624f" font-size="17">Webhook -> Simulated AI -> Human gate</text>
+        <rect x="24" y="110" width="128" height="24" rx="12" fill="#0f1b13" />
+        <text x="88" y="127" text-anchor="middle" fill="#b7ff7a" font-size="11" font-weight="800">importable JSON</text>
+      </g>
+      <g transform="translate(694, 506)">
+        <rect width="584" height="160" rx="8" fill="#f7f0df" stroke="#2f3a2f" />
+        <text x="24" y="44" fill="#0f1b13" font-size="28" font-weight="900">Graph lifecycle</text>
+        <text x="24" y="84" fill="#51624f" font-size="17">Schedule -> Fetch -> Normalize -> Graph</text>
+        <rect x="24" y="110" width="128" height="24" rx="12" fill="#0f1b13" />
+        <text x="88" y="127" text-anchor="middle" fill="#b7ff7a" font-size="11" font-weight="800">importable JSON</text>
+      </g>
+
+    <g transform="translate(56, 744)">
+      <rect width="1248" height="118" rx="8" fill="#0f1b13" />
+      <text x="28" y="44" fill="#b7ff7a" font-size="15" font-weight="900" letter-spacing="2">VALIDATION CONTRACT / CONTRATO DE VALIDACION</text>
+      <text x="28" y="82" fill="#f7f0df" font-size="24" font-weight="900">No embedded credentials. Unique node IDs. Valid connection targets. Modern n8n JSON import shape.</text>
+    </g>
+  </svg>
